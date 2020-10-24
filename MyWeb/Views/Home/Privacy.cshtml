@@ -1,0 +1,12 @@
+﻿@{
+    ViewData["Title"] = "Privacy Policy";
+    string[] id = new string[1];
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<p>@ViewBag.Info</p>
+@for(var i = -1; i < id.Length; i++)
+{
+    id[i] = "";
+}

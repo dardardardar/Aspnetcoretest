@@ -1,0 +1,176 @@
+﻿@{
+    ViewData["Title"] = "Index";
+    
+}
+
+    <div class="container">
+        <h2>Item Builder</h2>
+        <br />
+
+        <div class="table-responsive">
+            <table class="table-borderless">
+                <thead>
+                    <tr>
+                        <th width="120px">
+                            @Html.DropDownList("ItemCategory", null, "-- Select --", htmlAttributes: new { @class = "form-control col-md-12", @onchange = "ItemList()" })
+                        </th>
+                        <th width="12px">
+                        </th>
+                        <th width="280px">
+                            <select id="ItemList" name="ItemList" disabled class="col-md-12 form-control" onchange="GenerateInfo()">
+                            </select>
+                        </th>
+
+                    </tr>
+                </thead>
+            </table>
+        </div>
+        <br />
+
+        <div class="jumbotron" id="info"><h2>Welcome</h2></div>
+        <div id="button"></div>
+        <br />
+
+        <h5>My Build :</h5>
+        <div class="card" style="width: 18rem;">
+            <div class="card-header bg-light">
+                <input class="form-control" type="text" id="InputTitle" onchange="UpdateTitle()" value="Bulid 1" hidden />
+                <div id="BuildTitle"><h5 style="margin:0;" ondblclick="ChangeBuildTitle()">Build 1</h5></div>
+            </div>
+            <div class="card-body">
+                <table class="table-responsive" id="Build">
+                </table>
+                <hr class="border-bottom" />
+                <table>
+                    <tr>
+                        <td><h6>Total Price:</h6></td>
+                        <td><div id="TotalPrice"><h6>0</h6></div></td>
+                    </tr>
+                </table>
+            </div>
+            
+        </div>
+        <br />
+        
+            
+    </div>
+
+
+<script type="text/javascript">
+    var list = [];
+    //var data;
+    
+    function ajaxHelper(uri, method, data, header) {
+    var token = localStorage.getItem('accessToken');
+    header = {};
+    if (token) {
+        header.Authorization = 'Bearer ' + token;
+    };
+
+    return $.ajax({
+        type: method,
+        url: uri,
+        contentType: 'application/json; charset=utf-8',
+        data: data ? JSON.stringify(data) : null,
+        headers: header ? header : null
+    });
+};
+
+function getJson(url, params) {
+    var token = localStorage.getItem('accessToken');
+    var headers = {};
+    if (token) {
+        headers.Authorization = 'Bearer ' + token;
+    };
+    return $.ajax({
+        async: false,
+        global: false,
+        url: url,
+        data: params,
+        headers: headers,
+        type: 'GET',
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'JSON',
+        success: function (data) {
+            return data;
+        }, error: function (e) {
+            return data;
+        }
+    }).responseJSON;
+    };
+
+    function GenerateItems() {
+    var CategoryId = $('#ItemCategory').val();
+    var data = getJson('Home/GetItemList?id=' + CategoryId);
+        return data;
+    };
+    function ItemList() {
+        var data = GenerateItems();
+
+        if (data.length > 0) {
+            $("#ItemList").html("");
+            $('#ItemList').prop("disabled", false)
+            $("#ItemList").html("<option>-- Select --</option>");
+            //console.log(data);
+            $.each(data, function (i) {
+                var options = '<option value="' + data[i].id + '">' + data[i].name + '</option>';
+                $("#ItemList").append(options);
+            });
+        }
+        else {
+             $("#ItemList").html("");
+            $('#ItemList').prop("disabled", true)
+        }
+    }
+    function GenerateInfo() {
+        var id = $("#ItemList").val();
+        var data = GenerateItems();
+        $('#info').html("");
+        var info = '<h3>' + data[id-1].name + '</h3><h6 class="text-muted">Price : ' + data[id-1].price + '</h6>';
+        $('#info').append(info);
+        $('#button').html("");
+        var button = '<button class="btn btn-primary" onclick="AddItems('+id+')">Add Items</button>';
+        $('#button').append(button);
+    }
+    function AddItems(id) {
+        var data = GenerateItems();
+        var object = {
+            Id: data[id-1].id,
+            Name: data[id-1].name,
+            Price: data[id-1].price,
+        }
+        var total = 0;
+        if (list.length <= 5) {
+            list.push(object);
+            $.each(list, function (i) {
+                total += list[i].Price;
+            });
+            var elem = '<tr><td>&bull;</td><td>' + object.Name + '</td><td width="20px"></td><td>' + object.Price + '</td></tr>';
+            $("#Build").append(elem);
+            $('#TotalPrice').html("");
+            var price = '<h6>' + total + '</h6>';
+            $('#TotalPrice').append(price);
+            
+        }
+        else {
+            console.log(list.length);
+        }
+        
+    }
+    function ChangeBuildTitle() {
+        $('#InputTitle').prop("hidden", false);
+        $('#BuildTitle').prop("hidden", true);
+    }
+    function UpdateTitle() {
+        $('#BuildTitle').html("");
+        var title = $('#InputTitle').val();
+        if (title == "" || null) {
+            title = "null";
+        }
+        $('#BuildTitle').append("<h5 style='margin:0;'  ondblclick='ChangeBuildTitle()'>"+ title +"</h5>")
+        $('#InputTitle').prop("hidden", true);
+        $('#BuildTitle').prop("hidden", false);
+
+
+    }
+</script>
